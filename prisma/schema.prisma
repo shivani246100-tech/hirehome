@@ -1,0 +1,233 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Roles are stored as strings because SQLite does not support Prisma enums:
+// SEEKER | EMPLOYER | ADMIN
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  phone          String?
+  passwordHash   String
+  role           String   @default("SEEKER")
+  companyName    String?
+  companyWebsite String?
+  companyAbout   String?
+  companyLogo    String?
+  isVerified     Boolean  @default(false)
+  mustChangePassword Boolean @default(false)
+  premiumUntil   DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  profile      Profile?
+  jobs         Job[]
+  applications Application[]
+  orders       Order[]
+  resumes      Resume[]
+  resumeFiles  ResumeFile[]
+  tokens       Token[]
+}
+
+model Token {
+  id        String   @id @default(cuid())
+  userId    String
+  // EMAIL_VERIFY | PASSWORD_RESET
+  type      String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Profile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  headline        String?
+  location        String?
+  experienceYears Int      @default(0)
+  skills          String   @default("")
+  bio             String?
+  resumeUrl       String?
+  resumeText      String?
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id    String  @id @default(cuid())
+  name  String  @unique
+  slug  String  @unique
+  icon  String?
+  blurb String?
+
+  jobs Job[]
+}
+
+model Job {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  title            String
+  employerId       String
+  categoryId       String?
+  description      String
+  responsibilities String
+  requirements     String
+  skills           String   @default("")
+  jobType          String   @default("FULL_TIME")
+  workMode         String   @default("REMOTE")
+  location         String   @default("Work from home")
+  salaryMin        Int?
+  salaryMax        Int?
+  salaryPeriod     String   @default("MONTH")
+  experienceMin    Int      @default(0)
+  experienceMax    Int?
+  openings         Int      @default(1)
+  // PENDING_PAYMENT | ACTIVE | PAUSED | CLOSED
+  status           String   @default("PENDING_PAYMENT")
+  isFeatured       Boolean  @default(false)
+  plan             String   @default("STANDARD")
+  expiresAt        DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  employer     User          @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  category     Category?     @relation(fields: [categoryId], references: [id])
+  applications Application[]
+  reports      JobReport[]
+}
+
+model JobReport {
+  id             String   @id @default(cuid())
+  jobId          String
+  reporterUserId String?
+  email          String?
+  // PAY_TO_APPLY | SCAM | MISLEADING | DUPLICATE | EXPIRED | OTHER
+  reason         String
+  details        String?
+  // OPEN | REVIEWED | DISMISSED
+  status         String   @default("OPEN")
+  createdAt      DateTime @default(now())
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([status])
+}
+
+model Application {
+  id          String   @id @default(cuid())
+  jobId       String
+  seekerId    String
+  coverLetter String?
+  resumeUrl   String?
+  resumeId    String?
+  resumeFileId String?
+  // APPLIED | UNDER_REVIEW | INTERVIEW | OFFERED | REJECTED | WITHDRAWN
+  status      String   @default("APPLIED")
+  appliedAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  job        Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  seeker     User        @relation(fields: [seekerId], references: [id], onDelete: Cascade)
+  interview  Interview?
+  resume     Resume?     @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  resumeFile ResumeFile? @relation(fields: [resumeFileId], references: [id], onDelete: SetNull)
+
+  @@unique([jobId, seekerId])
+}
+
+model Resume {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  // CLASSIC | MODERN | MINIMAL
+  template    String    @default("CLASSIC")
+  contentJson String
+  // DRAFT | PAID
+  status      String    @default("DRAFT")
+  pdfUrl      String?
+  paidAt      DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders       Order[]
+  applications Application[]
+
+  @@index([userId])
+}
+
+model ResumeFile {
+  id           String   @id @default(cuid())
+  userId       String
+  fileName     String   @unique
+  originalName String
+  mimeType     String
+  size         Int
+  createdAt    DateTime @default(now())
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications Application[]
+
+  @@index([userId])
+}
+
+model Interview {
+  id            String   @id @default(cuid())
+  applicationId String   @unique
+  // ASSESSMENT | VIDEO
+  type          String
+  // SCHEDULED | COMPLETED | CANCELLED
+  status        String   @default("SCHEDULED")
+  scheduledAt   DateTime
+  durationMins  Int      @default(30)
+  meetingUrl    String?
+  recordingUrl  String?
+  questionsJson String?
+  answersJson   String?
+  score         Int?
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id                String    @id @default(cuid())
+  userId            String
+  jobId             String?
+  resumeId          String?
+  plan              String
+  // JOB_POST | CANDIDATE_PRO | RESUME
+  kind              String    @default("JOB_POST")
+  amount            Int
+  currency          String    @default("INR")
+  // Number of job posts included in this plan purchase and how many are used.
+  postsTotal        Int       @default(1)
+  postsUsed         Int       @default(0)
+  // CREATED | PAID | FAILED
+  status            String    @default("CREATED")
+  // DEMO | RAZORPAY | FREE
+  provider          String    @default("DEMO")
+  providerOrderId   String?
+  providerPaymentId String?
+  createdAt         DateTime  @default(now())
+  paidAt            DateTime?
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume Resume? @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+
+  @@index([resumeId])
+}

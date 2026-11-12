@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hirohome",
+  "main": ".open-next/worker.js",
+  // 2026-08-04 enables nodejs_compat + nodejs_compat_v2 by default (see
+  // Cloudflare docs) — no compatibility flags needed on this date or later.
+  "compatibility_date": "2026-08-04",
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      // Must match the "name" of this worker.
+      "service": "hirohome"
+    }
+  ],
+  // Optional: persistent Next.js incremental cache in R2 (recommended once the
+  // free allowance fits your volume). Create the bucket and uncomment:
+  // "r2_buckets": [
+  //   { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "hirohome-next-cache" }
+  // ],
+  "images": {
+    "binding": "IMAGES"
+  }
+}

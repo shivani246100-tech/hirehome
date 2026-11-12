@@ -1,0 +1,59 @@
+{
+  "name": "hirohome",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HiroHome - Real work-from-home jobs, applications and interviews.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "cf:build": "prisma generate --schema prisma/schema.postgres.prisma && opennextjs-cloudflare build",
+    "preview": "prisma generate --schema prisma/schema.postgres.prisma && opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "prisma generate --schema prisma/schema.postgres.prisma && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "upload": "prisma generate --schema prisma/schema.postgres.prisma && opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "start": "next start",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:generate:pg": "prisma generate --schema prisma/schema.postgres.prisma",
+    "db:migrate:deploy": "prisma migrate deploy --schema prisma/schema.postgres.prisma",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:seed:prod": "tsx prisma/seed-prod.ts",
+    "db:setup": "prisma generate && prisma db push && tsx prisma/seed.ts",
+    "test:e2e:resume": "node scripts/e2e-resume.mjs",
+    "test:e2e:security": "node scripts/e2e-security.mjs"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1167.0",
+    "@aws-sdk/s3-request-presigner": "^3.1167.0",
+    "@neondatabase/serverless": "^1.2.0",
+    "@pdf-lib/fontkit": "^1.1.1",
+    "@prisma/adapter-neon": "^6.19.3",
+    "@prisma/client": "^6.16.2",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.468.0",
+    "next": "^15.5.4",
+    "pdf-lib": "^1.17.1",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "regenerator-runtime": "^0.14.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.17",
+    "@tailwindcss/postcss": "^4.1.13",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "prisma": "^6.16.2",
+    "tailwindcss": "^4.1.13",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "wrangler": "^4.161.0"
+  }
+}

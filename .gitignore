@@ -1,0 +1,30 @@
+node_modules
+.next
+out
+dist
+*.tsbuildinfo
+next-env.d.ts
+
+# local database
+prisma/*.db
+prisma/*.db-journal
+
+# uploaded interview recordings
+uploads/
+
+# environment
+.env
+.env.local
+.dev.vars
+
+# Cloudflare / OpenNext build output
+.open-next
+cloudflare-env.d.ts
+.wrangler
+
+# logs
+npm-debug.log*
+install.log
+
+# misc
+.DS_Store
